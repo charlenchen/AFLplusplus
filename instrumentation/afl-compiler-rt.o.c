@@ -43,6 +43,8 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
+#include <sys/syscall.h> 
+
 #if !__GNUC__
   #include "llvm/Config/llvm-config.h"
 #endif
@@ -1568,7 +1570,8 @@ static int area_is_mapped(void *ptr, size_t len) {
   char *p = (char *)ptr;
   char *page = (char *)((uintptr_t)p & ~(sysconf(_SC_PAGE_SIZE) - 1));
 
-  int r = msync(page, (p - page) + len, MS_ASYNC);
+  //int r = msync(page, (p - page) + len, MS_ASYNC);
+  int r = syscall(SYS_msync, page, (p - page) + len, MS_ASYNC);
   if (r < 0) return errno != ENOMEM;
   return 1;
 
