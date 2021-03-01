@@ -1568,6 +1568,13 @@ static int area_is_valid(void *ptr, size_t len) {
   char *page = (char *)((uintptr_t)p & ~(sysconf(_SC_PAGE_SIZE) - 1));
 
   int r = syscall(SYS_msync, page, (p - page) + len, MS_ASYNC);
+  fprintf(stderr, "SYS_msync(%p, %u, MS_ASYNC) = %d (%d) - for %p %u\n", page, (p - page) + len, r, errno, ptr, len);
+  if (!r && (p - page) + len > sysconf(_SC_PAGE_SIZE)) {
+    page += sysconf(_SC_PAGE_SIZE);
+    len = (p - page + len) - sysconf(_SC_PAGE_SIZE);
+    r = syscall(SYS_msync, page, (p - page) + len, MS_ASYNC);
+    fprintf(stderr, "SYS_msync2(%p, %u, MS_ASYNC) = %d (%d) - for %p %u\n", page, (p - page) + len, r, errno, ptr, len);
+  }
   if (r < 0) return errno != ENOMEM;
   return 1;
 
@@ -1617,10 +1624,13 @@ void __cmplog_rtn_hook(u8 *ptr1, u8 *ptr2) {
   }
 
   hits &= CMP_MAP_RTN_H - 1;
+  fprintf(stderr, "%p\n", ptr1);
   __builtin_memcpy(((struct cmpfn_operands *)__afl_cmp_map->log[k])[hits].v0,
                    ptr1, 32);
+  fprintf(stderr, "%p\n", ptr2);
   __builtin_memcpy(((struct cmpfn_operands *)__afl_cmp_map->log[k])[hits].v1,
                    ptr2, 32);
+  fprintf(stderr, "\n");
 
 }
 
