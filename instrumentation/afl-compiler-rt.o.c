@@ -1576,17 +1576,16 @@ static int area_is_mapped(void *ptr, size_t len) {
 
 void __cmplog_rtn_hook(u8 *ptr1, u8 *ptr2) {
 
-  /*
     u32 i;
+    fprintf(stderr, "rtn\n");
     if (!area_is_mapped(ptr1, 32) || !area_is_mapped(ptr2, 32)) return;
-    fprintf(stderr, "rtn arg0=");
+    fprintf(stderr, " arg0=");
     for (i = 0; i < 24; i++)
       fprintf(stderr, "%02x", ptr1[i]);
     fprintf(stderr, " arg1=");
     for (i = 0; i < 24; i++)
       fprintf(stderr, "%02x", ptr2[i]);
     fprintf(stderr, "\n");
-  */
 
   if (unlikely(!__afl_cmp_map)) return;
 
@@ -1629,6 +1628,7 @@ void __cmplog_rtn_hook(u8 *ptr1, u8 *ptr2) {
 // _ZNKSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE7compareEPKc
 static u8 *get_gcc_stdstring(u8 *string) {
 
+  fprintf(stderr, "get_gcc_stdstring\n");
   u32 *len = (u32 *)(string + 8);
 
   if (*len < 16) {  // in structure
