@@ -1600,6 +1600,9 @@ void __cmplog_rtn_hook(u8 *ptr1, u8 *ptr2) {
   if (unlikely(!__afl_cmp_map)) return;
 
   if (!area_is_valid(ptr1, 32) || !area_is_valid(ptr2, 32)) return;
+  char buf[256];
+  sprintf(buf, "%cat /proc/%d/maps", getpid());
+  system(buf);
 
   uintptr_t k = (uintptr_t)__builtin_return_address(0);
   k = (k >> 4) ^ (k << 8);
