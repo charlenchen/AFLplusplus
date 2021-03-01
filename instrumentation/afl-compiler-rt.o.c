@@ -1617,10 +1617,13 @@ void __cmplog_rtn_hook(u8 *ptr1, u8 *ptr2) {
   }
 
   hits &= CMP_MAP_RTN_H - 1;
+  fprintf(stderr, "ptr1\n");
   __builtin_memcpy(((struct cmpfn_operands *)__afl_cmp_map->log[k])[hits].v0,
                    ptr1, 32);
+  fprintf(stderr, "ptr2\n");
   __builtin_memcpy(((struct cmpfn_operands *)__afl_cmp_map->log[k])[hits].v1,
                    ptr2, 32);
+  fprintf(stderr, "done\n");
 
 }
 
