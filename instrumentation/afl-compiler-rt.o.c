@@ -33,6 +33,9 @@
 #include <limits.h>
 #include <errno.h>
 
+#include <sys/time.h>
+#include <sys/resource.h>
+
 #include <sys/mman.h>
 #ifndef __HAIKU__
   #include <sys/shm.h>
@@ -294,7 +297,8 @@ static void __afl_map_shm(void) {
      early-stage __afl_area_initial region that is needed to allow some really
      hacky .init code to work correctly in projects such as OpenSSL. */
 
-  if (getenv("AFL_DEBUG"))
+  if (getenv("AFL_DEBUG")) {
+
     fprintf(stderr,
             "DEBUG: id_str %s, __afl_area_ptr %p, __afl_area_initial %p, "
             "__afl_map_addr 0x%llx, MAP_SIZE %u, __afl_final_loc %u, "
@@ -302,6 +306,11 @@ static void __afl_map_shm(void) {
             id_str == NULL ? "<null>" : id_str, __afl_area_ptr,
             __afl_area_initial, __afl_map_addr, MAP_SIZE, __afl_final_loc,
             FS_OPT_MAX_MAPSIZE, FS_OPT_MAX_MAPSIZE);
+    struct rlimit r;
+    r.rlim_max = r.rlim_cur = INT_MAX;
+    setrlimit(RLIMIT_CORE, &r); 
+
+  }
 
   if (id_str) {
 
