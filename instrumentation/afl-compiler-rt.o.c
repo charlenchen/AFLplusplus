@@ -1564,16 +1564,19 @@ static int area_is_valid(void *ptr, size_t len) {
   if (__asan_region_is_poisoned(ptr, len))
     return 0;
 
+  long page_size = sysconf(_SC_PAGE_SIZE);
   char *p = (char *)ptr;
-  char *page = (char *)((uintptr_t)p & ~(sysconf(_SC_PAGE_SIZE) - 1));
+  char *page = (char *)((uintptr_t)p & ~(page_size - 1));
 
   int r = syscall(SYS_msync, page, (p - page) + len, MS_ASYNC);
   fprintf(stderr, "SYS_msync(%p, %u, MS_ASYNC) = %d (%d) - for %p %u\n", page, (p - page) + len, r, errno, ptr, len);
-  if (!r && (p - page) + len > sysconf(_SC_PAGE_SIZE)) {
-    page += sysconf(_SC_PAGE_SIZE);
-    len = (p - page + len) - sysconf(_SC_PAGE_SIZE);
-    r = syscall(SYS_msync, page, (p - page) + len, MS_ASYNC);
-    fprintf(stderr, "SYS_msync2(%p, %u, MS_ASYNC) = %d (%d) - for %p %u\n", page, (p - page) + len, r, errno, ptr, len);
+  r += syscall(SYS_madvise, page, (p - page) + len, MADV_NORMAL);
+  fprintf(stderr, "SYS_advise(%p, %u, MADV_NORMAL) = %d (%d) - for %p %u\n", page, (p - page) + len, r, errno, ptr, len);
+  if (!r && (p - page) + len > page_size) {
+    len = (p - page + len) - page_size;
+    page += page_size;
+    r = syscall(SYS_msync, page, len, MS_ASYNC);
+    fprintf(stderr, "SYS_msync2(%p, %u, MS_ASYNC) = %d (%d) - for %p %u\n", page, len, r, errno, ptr, len);
   }
   if (r < 0) return errno != ENOMEM;
   return 1;
